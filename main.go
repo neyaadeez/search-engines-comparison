@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -35,6 +36,8 @@ type RankTable struct {
 }
 
 func main() {
+	// SortTheData()
+	// return
 	// generateMyData()
 	csvdata, avgs, err := compareData("Google_Result2.json", "yahooData.json")
 	if err != nil {
@@ -366,4 +369,51 @@ func checkAndResolve(fileName string) (map[string]string, error) {
 	fmt.Println("defect: ", defect)
 
 	return nil, nil
+}
+
+func SortTheData() {
+	// Step 1: Read the text file containing the keys
+	textFilePath := "hw1_set2_queries.txt"
+	textFileData, err := os.ReadFile(textFilePath)
+	if err != nil {
+		log.Fatalf("Failed to read text file: %v", err)
+	}
+	keys := strings.Split(string(textFileData), "\n")
+	for i, key := range keys {
+		keys[i] = strings.TrimSpace(key)
+	}
+
+	// Step 2: Read and parse the JSON data
+	jsonFilePath := "yahooData.json"
+	jsonFileData, err := os.ReadFile(jsonFilePath)
+	if err != nil {
+		log.Fatalf("Failed to read JSON file: %v", err)
+	}
+
+	var data map[string][]string
+	err = json.Unmarshal(jsonFileData, &data)
+	if err != nil {
+		log.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+
+	// Step 3: Sort the data based on the keys from the text file
+	// Use a slice of maps to maintain order
+	var sortedData []map[string][]string
+	for _, key := range keys {
+		if val, exists := data[key]; exists {
+			sortedData = append(sortedData, map[string][]string{key: val})
+		}
+	}
+
+	// Step 4: Marshal the sorted data back into JSON and print/save
+	sortedJSON, err := json.MarshalIndent(sortedData, "", "  ")
+	if err != nil {
+		log.Fatalf("Failed to marshal sorted JSON: %v", err)
+	}
+
+	// Optional: Save the sorted JSON back to a file
+	err = os.WriteFile("sorted_qyery.json", sortedJSON, 0644)
+	if err != nil {
+		log.Fatalf("Failed to write sorted JSON to file: %v", err)
+	}
 }
